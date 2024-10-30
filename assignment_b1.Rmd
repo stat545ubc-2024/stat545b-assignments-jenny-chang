@@ -45,7 +45,7 @@ library(palmerpenguins)
 
 **Example 1. Count unique countries by continent**
 
-By counting the unique countries by continent, it gives us a sense of how many distinct countries are represented per continent.
+By counting the unique countries by continent, it gives sense of how many distinct countries are represented per continent.
 
 ```{r, example 1}
 count_unique(gapminder, country, continent)
@@ -54,7 +54,7 @@ count_unique(gapminder, country, continent)
 
 **Example 2. Count Unique Countries by Continent and Year**
 
-By using both continent and year as grouping variables, we see the number of unique countries for each year within each continent.
+By using both continent and year as grouping variables, the number of unique countries for each year within each continent can be found.
 
 ```{r, example 2}
 count_unique(gapminder, country, continent, year, .groups = "keep")
@@ -62,7 +62,7 @@ count_unique(gapminder, country, continent, year, .groups = "keep")
 
 **Example 3: Deliberately causing an error by calling a non-existent variable**
 
-In this example, \`non_existent_var\` does not exist in the \`gapminder\` dataset, so an error will be triggered when trying to summarize by non_existent_var. By setting \`error = TRUE\`, the document will render normally, and the error message will display in the output.
+In this example, \`non_existent_var\` does not exist in the \`gapminder\` dataset, so an error will be triggered when trying to summarize by non_existent_var.
 
 ```{r, error = TRUE}
 count_unique(gapminder, non_existent_var, continent)

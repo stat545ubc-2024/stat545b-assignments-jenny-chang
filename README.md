@@ -20,5 +20,3 @@ install.packages("palmerpenguins")
 -   assignment_b1.Rmd: Explores the four research questions outlined in my project *(R Markdown file)*
 
 -   assignment_b1.md: Knitted version of the R markdown file for displaying in github *(Markdown file)*
-
--   
