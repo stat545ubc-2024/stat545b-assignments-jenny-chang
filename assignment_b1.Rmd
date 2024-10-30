@@ -1,105 +1,121 @@
 ---
-title: "assignment_b1"
+title: "Assignment_b1"
 author: "STAT545"
 date: "2024-10-24"
-output: html_document
+output: github_document
+Roxygen: list(markdown = TRUE)
 ---
 
-# Load data ---------------------------
+### Making and documenting the function:
+
 ```{r}
-library(tidyverse)
-library(gapminder)
-```
+#' Count Unique Values by Group
+#'
+#' This function calculates the number of unique values in a specified column (`summ_var`) within each group defined by one or more grouping variables. It’s useful for understanding the distribution of unique values within groups.
+#' 
+#' @param data A data frame or tibble containing the data to be summarized. Chose `data` as it clearly indicates the primary data input.
+#' @param summ_var The variable for which unique values are counted within each group. Named `summ_var` to clearly denote that this is the summarized variable in the count.
+#' @param ... One or more grouping variables within the dataset. These variables define the grouping structure for summarizing `summ_var`. The `...` notation allows for flexible input of single or multiple variables.
+#' @param .groups A character string indicating how to handle grouping in the result. Options are "drop" (default), "keep", "drop_last", or "rowwise". The `.groups` name follows `dplyr` syntax for familiarity.
+#'
+#' @return A tibble with one row per group and a column `unique_sum`, showing the count of unique values in `summ_var` for each group defined by `...`.
+#' @export
+#' 
+#' 
+#' 
 
-
-# Build function ----------------------
-Define a function to count the number of unique values in summ_var grouped by group_var
-```{r}
-count_unique <- function(data, group_var, summ_var, .groups = "drop") {
-  data %>%
-    group_by({{ group_var }}) %>%
-    summarize(unique_sum = n_distinct({{ summ_var }}), .groups = .groups)
-}
-
-# Example usage
-count_unique(gapminder, continent, country, .groups = "keep")
-```
-
-
-# Example usage
-get_unique_values("continent") # Get unique continent
-get_unique_values("country")   # Get unique countries
-get_unique_values("year")      # Get unique years
-
-# Example usage
-get_unique_values(country, continent)  # Get unique countries per continent
-get_unique_values(year, continent)     # Get unique years per continent
-
-
-
-
-library(palmerpenguins)
-
-#change this to be more generalizable
-summarize_missing_values <- function(data) {
-  data %>%
-    group_by(species) %>%
-    summarize(across(everything(), ~ sum(is.na(.x))))
-}
-
-summarize_missing_values(penguins)
-
-#replace species
-summarize_missing_values <- function(data, group_var) {
-  data %>%
-    group_by({{group_var}}) %>%
-    summarize(across(everything(), ~ sum(is.na(.x))))
-}
-
-summarize_missing_values(penguins, species)
-
-#replace aross(everything)
-summarize_missing_values <- function(data, group_var, summ_vars) {
-  data %>%
-    group_by({{group_var}}) %>%
-    summarize(across({{summ_vars}}, ~ sum(is.na(.x))))
-}
-
-summarize_missing_values(penguins, species, c(body_mass_g, bill_length_mm))
-
-#dropping groups by default
-summarize_missing_values <- function(data, ..., summ_vars, .groups = "drop") {
+count_unique <- function(data, summ_var, ..., .groups = "drop") {
   data %>%
     group_by(...) %>%
-    summarize(across({{summ_vars}}, ~ sum(is.na(.x))), .groups = .groups)
+    summarize(unique_sum = n_distinct({{ summ_var }}[!is.na({{ summ_var }})]), .groups = .groups)
 }
 
-summarize_missing_values(penguins, species, island, summ_vars = c(body_mass_g, bill_length_mm))
-
-
-
-# Plot data ---------------------------
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
 ```
 
-## R Markdown
+### -------------------------------------------------
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
+```{r}
+library(dplyr)
+library(gapminder)
+library(testthat)
+library(palmerpenguins)
 ```
 
-## Including Plots
+### Examples of use of this function:
 
-You can also embed plots, for example:
+**Example 1. Count unique countries by continent**
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+By counting the unique countries by continent, it gives us a sense of how many distinct countries are represented per continent.
+
+```{r, example 1}
+count_unique(gapminder, country, continent)
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+**Example 2. Count Unique Countries by Continent and Year**
+
+By using both continent and year as grouping variables, we see the number of unique countries for each year within each continent.
+
+```{r, example 2}
+count_unique(gapminder, country, continent, year, .groups = "keep")
+```
+
+**Example 3: Deliberately causing an error by calling a non-existent variable**
+
+In this example, \`non_existent_var\` does not exist in the \`gapminder\` dataset, so an error will be triggered when trying to summarize by non_existent_var. By setting \`error = TRUE\`, the document will render normally, and the error message will display in the output.
+
+```{r, error = TRUE}
+count_unique(gapminder, non_existent_var, continent)
+
+```
+
+### Testing this function:
+
+**Testing vector with no NA’s.** There are no NA's in the species variable of the *palmerpenguins* dataset.
+
+This test checks if the summary showing each island and the number of unique species observed on it are the same with my function and with using the *group_by %\>% summarize* function.
+
+```{r, no NA}
+sum(is.na(penguins$species))
+
+test_that("count_unique function correctly counts unique species by island", {
+  
+  unique_species_count <- penguins %>%
+    group_by(island) %>%
+    summarize(unique_sum = n_distinct(species), .groups = "drop")
+
+  expect_equal(count_unique(penguins, species, island), unique_species_count)
+
+})
+```
+
+**Testing vector that has NA’s, also tests with a numerical variable instead of categorical.** There are 2 NA's in the numerical *flipper_length_mm* variable of the *palmerpenguins* dataset.
+
+This test checks if the summary showing the number of unique flipper_length_mm observed on for each species are the same with my function and with using the *filter is.NA %\>% group_by %\>% summarize* function.
+
+```{r, with NA, numerical}
+sum(is.na(penguins$flipper_length_mm))
+
+test_that("count_unique function handles missing values in `flipper_length_mm`", {
+  
+  expected_result <- penguins %>%
+    filter(!is.na(flipper_length_mm)) %>% 
+    group_by(species) %>%
+    summarize(unique_sum = n_distinct(flipper_length_mm), .groups = "drop")
+  
+  expect_equal(count_unique(penguins, flipper_length_mm, species), expected_result)
+})
+```
+
+**Test 3: Handling an empty dataset.** Filtering penguins to 0 row renders the dataset empty with no rows.
+
+This test checks if an empty input dataset (resulting from a filter that yields no matching rows) will correctly return an output with zero rows.
+
+```{r, empty dataset}
+test_that("count_unique function handles vector of length 0 correctly", {
+
+  empty_penguins <- penguins %>% filter(island == "Nonexistent")
+  
+  expect_equal(nrow(count_unique(empty_penguins, species, island)), 0) 
+})
+```
